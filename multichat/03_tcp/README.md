@@ -6,8 +6,8 @@ Sistema de chat en tiempo real con **arquitectura de tres capas** que comunica u
 
 ## Integrantes
 
-* Juan David Calderon
-* Juan Felipe Nieto
+* Juan David Calderon - A00403633
+* Juan Felipe Nieto - A00404377
 
 ---
 
@@ -242,11 +242,12 @@ npm start
 
 ---
 
-### Acceso a la aplicación
+### Acceso y uso de la aplicación
 
 1. Abre tu navegador en `http://localhost:8080`
 2. Ingresa un nombre de usuario y haz clic en "Join Chat"
 3. Para probar con múltiples usuarios, abre otra ventana en **modo incógnito** (Ctrl+Shift+N en Chrome/Edge, Cmd+Shift+N en Safari)
+4. Al crear los multiples se recomienda crear un perfil con nombre propio y el segundo perfil crearlo como "Juan David Calderon", de esta forma se podra probar de forma apropiada el chat.
 
 ---
 
@@ -658,4 +659,6 @@ Duration: ~0.3s
 * **TCP/JSON binario**: comunicación eficiente entre proxy y backend.
 * **HTTP/REST**: interfaz estándar para el frontend.
 * **Polling HTTP**: alternativa simple a WebSockets (2 segundos).
+
+
 

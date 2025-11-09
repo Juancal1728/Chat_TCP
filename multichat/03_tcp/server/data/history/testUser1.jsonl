@@ -1,0 +1,4 @@
+{type:text,from:testUser1,target:testUser2,isGroup:false,msg:Mensaje de prueba,ts:2025-11-08T23:36:12.517271700Z}
+{type:text,from:testUser1,target:testUser2,isGroup:false,msg:Hola!,ts:2025-11-08T23:36:12.648229Z}
+{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-08T23:36:12.648837800Z}
+{type:text,from:nieto,target:testUser1,isGroup:false,msg:fmm+r,ts:2025-11-08T23:42:37.466644300Z}
