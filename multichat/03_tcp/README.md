@@ -48,7 +48,7 @@ Sistema de chat en tiempo real con **arquitectura de tres capas** que comunica u
 └───────────────────────────────────────────────────────────────┘
 ```
 
-**Nota**: El sistema mantiene compatibilidad con HTTP/REST para servicios existentes, pero la nueva funcionalidad (historial, mensajes, audio, llamadas) usa ICE RPC para tiempo real.
+**Nota**: El sistema mantiene compatibilidad con HTTP/REST para servicios existentes, pero la nueva funcionalidad (historial, mensajes, audio, llamadas) usa ICE RPC (WebSocket) para tiempo real.
 
 ---
 
@@ -272,21 +272,21 @@ npm start
 ### Sincronización en Tiempo Real con ICE
 
 * **ICE RPC**: comunicación directa y eficiente entre frontend y backend.
-* **WebSockets ICE**: notificaciones push para mensajes, llamadas y eventos.
-* **Historial en tiempo real**: recuperación instantánea de mensajes previos.
-* **Mensajes push**: llegada inmediata sin polling.
+* **WebSockets ICE**: notificaciones push para mensajes, audio y llamadas.
+* **Historial**: carga de historial (texto/audio) por usuario o grupo; timestamps preservados.
+* **Mensajes push**: llegada inmediata sin polling; fallback WebSocket/REST para resiliencia.
 
 ### Notas de Voz
 
-* **Grabación desde navegador**: uso de MediaRecorder API.
-* **Envío vía ICE**: audio codificado en base64.
-* **Reproducción integrada**: soporte en interfaz de chat.
+* **Grabación desde navegador**: MediaRecorder API.
+* **Envío vía ICE**: audio codificado en base64 (usuario y grupos).
+* **Reproducción integrada**: reproductor en burbujas con duración y timestamp.
 
 ### Llamadas de Voz
 
-* **Inicio de llamadas**: notificación push a receptor.
-* **Gestión de estado**: llamadas activas/inactivas.
-* **Finalización**: notificación a ambos participantes.
+* **Inicio y aceptación**: señalización ICE/WS, WebRTC para media.
+* **Gestión de estado**: logs “call started/ended” con duración para ambos lados.
+* **Finalización**: cierre y notificación mutua.
 
 ### Interfaz Moderna
 * **Diseño tipo WhatsApp**: dark theme profesional y limpio.
@@ -297,10 +297,8 @@ npm start
 * **Estados visuales**: hover, focus y active bien definidos.
 
 ### Testing
-* **38 tests unitarios**: suite completa de tests JUnit 5.
-* **Cobertura de backend**: `ChatServicesImpl`, DTOs, controladores.
-* **Tests de integración**: validación de flujos completos.
-* **Reporte HTML**: generado automáticamente en `server/build/reports/tests/`.
+* **Tests backend**: suite JUnit 5 sobre servicios y controladores.
+* **(Frontend)**: verificación manual de ICE/WS/WebRTC (sin harness automatizado).
 
 ---
 
@@ -315,8 +313,8 @@ npm start
 **Mensajes y Audio (ICE RPC)**
 
 1. Frontend conecta a ICE `:10000` y suscribe a eventos.
-2. Usuario envía mensaje/audio → `sendMessage/sendAudio` vía ICE.
-3. Backend persiste y notifica a receptores vía callback ICE.
+2. Usuario envía mensaje/audio → `sendMessage/sendAudio` vía ICE (usuarios o grupos).
+3. Backend persiste y notifica a receptores vía callback ICE; fallback WebSocket si el callback no está disponible.
 4. Frontend recibe notificación push y actualiza UI.
 
 **Llamadas (ICE RPC)**
