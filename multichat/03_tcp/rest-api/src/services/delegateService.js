@@ -15,23 +15,68 @@ const sendRequest = (action, data) => {
         action: action,
         data: data,
       };
-      socket.write(JSON.stringify(request));
+      const reqStr = JSON.stringify(request);
+      console.log('[delegateService] Sending TCP request → action:', action, 'data:', data);
+      socket.write(reqStr);
       socket.write('\n');
 
-      socket.once('data', (data) => {
-        const message = data.toString().trim();
-        try {
-          resolve(JSON.parse(message));
-        } catch (e) {
-          reject(e);
+      // Accumulate response chunks until a full JSON message is received (delimited by '\n')
+      let buffer = '';
+      // Add a timeout to prevent stuck sockets; 5s is reasonable for local dev
+      socket.setTimeout(5000);
+
+      const onData = (chunk) => {
+        buffer += chunk.toString();
+        // If we received at least one newline, parse up to the first newline
+        const newlineIndex = buffer.indexOf('\n');
+        if (newlineIndex !== -1) {
+          const message = buffer.substring(0, newlineIndex).trim();
+          try {
+            const parsed = JSON.parse(message);
+            resolve(parsed);
+          } catch (e) {
+            console.error('[delegateService] Failed to parse TCP-JSON response:', message);
+            reject(e);
+          }
+          socket.removeListener('data', onData);
+          socket.removeListener('end', onEnd);
+          socket.removeListener('timeout', onTimeout);
+          socket.end();
         }
+      };
+
+      socket.on('data', onData);
+      const onEnd = () => {
+        // If we close without a newline, try to parse buffer anyway
+        if (buffer.length > 0) {
+          const message = buffer.trim();
+          try {
+            const parsed = JSON.parse(message);
+            resolve(parsed);
+            return;
+          } catch (e) {
+            console.error('[delegateService] Failed to parse TCP-JSON response on socket end:', message);
+            reject(e);
+            return;
+          }
+        }
+        reject(new Error('TCP connection ended without data'));
+      };
+
+      const onTimeout = () => {
+        socket.removeListener('data', onData);
+        socket.removeListener('end', onEnd);
+        reject(new Error('TCP request timeout'));
         socket.end();
-      });
+      };
+      socket.on('end', onEnd);
+      socket.on('timeout', onTimeout);
     });
 
     socket.on('error', (err) => {
       reject(err);
     });
+    // ensure all errors/timeouts are captured -- the 'timeout' handler is added per connection
   });
 };
 

@@ -524,18 +524,28 @@ public class ChatServicesImpl {
         ClientSession targetSession = users.get(target);
         ClientSession callerSession = users.get(caller);
 
-        if (targetSession == null || targetSession.udpPort == 0 || callerSession == null || callerSession.udpPort == 0) {
+        if (targetSession == null || callerSession == null) {
+            // If either user isn't online we cannot place a call
             return null;
         }
 
-        // Notificar al target
-        if (targetSession.out != null && targetSession.socket != null) {
-            targetSession.out.println("INCOMING_CALL " + caller + " " +
-                    callerSession.socket.getInetAddress().getHostAddress() + " " + callerSession.udpPort);
+        // If both users have udp ports configured (native clients), return the UDP address
+        if (targetSession.udpPort != 0 && callerSession.udpPort != 0 && targetSession.socket != null) {
+            // Notificar al target (native UDP capable clients)
+            if (targetSession.out != null && targetSession.socket != null) {
+                targetSession.out.println("INCOMING_CALL " + caller + " " +
+                        callerSession.socket.getInetAddress().getHostAddress() + " " + callerSession.udpPort);
+            }
+            // Retornar información de conexión para el caller
+            return targetSession.socket.getInetAddress().getHostAddress() + ":" + targetSession.udpPort;
         }
 
-        // Retornar información de conexión para el caller
-        return targetSession.socket.getInetAddress().getHostAddress() + ":" + targetSession.udpPort;
+        // Web clients don't use UDP, but we still want to support calls via WebSocket/ICE.
+        // Notify target that an incoming call is requested and return a simple 'websocket' token.
+        if (targetSession.out != null) {
+            targetSession.out.println("INCOMING_CALL_WS " + caller);
+        }
+        return "websocket";
     }
 
     // ---- Utilidades ----

@@ -2,6 +2,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,8 +16,28 @@ export default {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '',
   },
+  resolve: {
+    fallback: {
+      fs: false,
+      net: false,
+      tls: false,
+      crypto: false,
+      stream: false,
+      url: false,
+      zlib: false,
+      http: false,
+      https: false,
+      assert: false,
+      os: false,
+      path: false
+    }
+  },
   module: {
     rules: [
+      {
+        test: /ChatService\.js$/,
+        use: 'script-loader',
+      },
       {
         test: /\.js$/,
         exclude: /node_modules/,
@@ -47,6 +68,11 @@ export default {
         );
       },
       inject: false
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'src/services/ChatService.js', to: 'src/services/ChatService.js' }
+      ]
     })
   ],
   devServer: {
@@ -55,7 +81,7 @@ export default {
     },
     historyApiFallback: true,
     compress: true,
-    port: 8080,
+    port: 3000,
     hot: true,
     open: false, // Prevent auto-opening browser
   },

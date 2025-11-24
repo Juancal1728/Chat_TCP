@@ -1,6 +1,6 @@
-# Sistema de Chat Multi‑Protocolo TCP
+# Sistema de Chat Multi‑Protocolo TCP con ICE RPC
 
-Sistema de chat en tiempo real con **arquitectura de tres capas** que comunica un **frontend web** con un **proxy REST** y un **servidor Java TCP/JSON**. Soporta mensajería privada y grupal, perfiles locales y sincronización mediante **polling HTTP**.
+Sistema de chat en tiempo real con **arquitectura de tres capas** que comunica un **frontend web** con un **proxy REST** y un **servidor Java TCP/JSON**, ahora migrado a **ICE RPC** para comunicación en tiempo real. Soporta mensajería privada y grupal, notas de voz, llamadas, perfiles locales y sincronización mediante **WebSockets ICE**.
 
 ---
 
@@ -36,53 +36,42 @@ Sistema de chat en tiempo real con **arquitectura de tres capas** que comunica u
 ┌───────────────────────────────────────────────────────────────┐
 │                      WEB CLIENT (Frontend)                    │
 │                JavaScript + Webpack  •  :8080                 │
-│  - UI Login/Chat   - Perfiles locales   - Polling 2 s         │
+│  - UI Login/Chat   - Perfiles locales   - ICE RPC             │
 └───────────────▲───────────────────────────────────────────────┘
-                │ HTTP/REST
+                │ ICE RPC (WebSocket)
                 │
 ┌───────────────┴───────────────────────────────────────────────┐
-│                   REST API PROXY (Node.js)                    │
-│                    Express/CORS  •  :5001                     │
-│  - Endpoints REST  - Traducción HTTP ⇄ TCP/JSON               │
-└───────────────▲───────────────────────────────────────────────┘
-                │ TCP/JSON
-                │
-┌───────────────┴───────────────────────────────────────────────┐
-│                  BACKEND SERVER (Java 21)                     │
-│                      Sockets TCP  •  :12345                   │
-│  - ChatServicesImpl  - TCPJSONController  - Persistencia      │
+│                  BACKEND SERVER (Java 21 + ICE)               │
+│                      ICE Adapter  •  :10000                   │
+│  - ChatServiceImpl  - ChatServicesImpl  - Persistencia        │
+│  - TCP original (:6000)  - TCP-JSON (:12345)                  │
 └───────────────────────────────────────────────────────────────┘
 ```
+
+**Nota**: El sistema mantiene compatibilidad con HTTP/REST para servicios existentes, pero la nueva funcionalidad (historial, mensajes, audio, llamadas) usa ICE RPC para tiempo real.
 
 ---
 
 ## Componentes
 
-**1) Backend (Java) — `03_tcp/server/`**
+**1) Backend (Java + ICE) — `03_tcp/server/`**
 
-* **Puerto**: `12345` (TCP/JSON)
-* **Responsabilidades**: lógica de negocio; usuarios, grupos, colas de pendientes; persistencia en archivos `.jsonl`.
-* **Clases**: `ChatServicesImpl`, `TCPJSONController`, DTOs `Request/Response`, `Main`.
+* **Puertos**: `10000` (ICE RPC), `12345` (TCP/JSON), `6000` (TCP original)
+* **Responsabilidades**: lógica de negocio; usuarios, grupos, colas de pendientes; persistencia en archivos `.jsonl`; servicios ICE para tiempo real.
+* **Clases**: `ChatServicesImpl`, `ChatServiceImpl` (ICE), `TCPJSONController`, DTOs `Request/Response`, `Main`.
 
-**2) REST API Proxy (Node.js) — `03_tcp/rest-api/`**
-
-* **Puerto**: `5001` (HTTP)
-* **Responsabilidades**: exponer endpoints REST; traducir HTTP⇄TCP/JSON; CORS.
-* **Archivos**: `src/index.js`, `src/services/delegateService.js`.
-
-**3) Web Client (Frontend) — `03_tcp/web-client/`**
+**2) Web Client (Frontend) — `03_tcp/web-client/`**
 
 * **Puerto**: `8080` (webpack dev server)
-* **Responsabilidades**: UI, estados locales, polling, paneles de perfil/grupos.
-* **Código**: páginas `Login.js`, `Chat.js`; componentes `ProfilePanel.js`, `UserInfoPanel.js`, `GroupSettingsPanel.js`; `services/restDelegate.js`.
+* **Responsabilidades**: UI, estados locales, ICE RPC, paneles de perfil/grupos, grabación de audio.
+* **Código**: páginas `Login.js`, `Chat.js`; componentes `ProfilePanel.js`, `UserInfoPanel.js`, `GroupSettingsPanel.js`; `services/iceDelegate.js`, `services/restDelegate.js`.
 
 ---
 
 ## Tecnologías
 
-* **Backend**: Java 21 (LTS), Gradle 8.10.x, Gson 2.10.x, JUnit 5, sockets TCP.
-* **Middleware**: Node.js ≥ 18, Express 4, CORS, `net` (cliente TCP).
-* **Frontend**: JavaScript ES6+, Webpack 5, Babel, HTML5, CSS3.
+* **Backend**: Java 21 (LTS), Gradle 8.10.x, Gson 2.10.x, ZeroC ICE 3.7.10, JUnit 5, sockets TCP.
+* **Frontend**: JavaScript ES6+, Webpack 5, Babel, ZeroC ICE 3.7.10, HTML5, CSS3, MediaRecorder API.
 
 ---
 
@@ -90,9 +79,12 @@ Sistema de chat en tiempo real con **arquitectura de tres capas** que comunica u
 
 1. **JDK 21+**
    Verifica: `java -version`
-2. **Node.js 18+ y npm**
+2. **ZeroC ICE**
+   Instala: `brew install zeroc-ice` (macOS) o descarga de https://zeroc.com/downloads/ice
+   Verifica: `slice2java --version`
+3. **Node.js 18+ y npm**
    Verifica: `node --version` y `npm --version`
-3. **(Opcional) Git**
+4. **(Opcional) Git**
    Verifica: `git --version`
 
 ---
@@ -101,14 +93,15 @@ Sistema de chat en tiempo real con **arquitectura de tres capas** que comunica u
 
 > **Nota**: Asume que tu proyecto está en `/ruta/a/tu/proyecto/03_tcp/`
 
-### 1) Backend (Java)
+### 1) Backend (Java + ICE)
 
-Gradle wrapper descarga dependencias automáticamente.
+Gradle wrapper descarga dependencias automáticamente. Compila los archivos `.ice` para generar stubs.
 
 **Windows (CMD/PowerShell)**
 ```cmd
 cd C:\ruta\a\tu\proyecto\03_tcp
 .\gradlew.bat --version
+slice2java -I. server/src/main/ChatService.ice --output-dir server/src/main/java
 .\gradlew.bat :server:build
 ```
 
@@ -116,6 +109,7 @@ cd C:\ruta\a\tu\proyecto\03_tcp
 ```bash
 cd /ruta/a/tu/proyecto/03_tcp
 ./gradlew --version
+slice2java -I. server/src/main/ChatService.ice --output-dir server/src/main/java
 ./gradlew :server:build
 ```
 
@@ -133,27 +127,29 @@ cd /ruta/a/tu/proyecto/03_tcp/rest-api
 npm install
 ```
 
-### 3) Web Client (Frontend)
+### 2) Web Client (Frontend)
 
 **Windows (CMD/PowerShell)**
 ```cmd
 cd C:\ruta\a\tu\proyecto\03_tcp\web-client
 npm install
+npx slice2js ../../server/src/main/ChatService.ice --output-dir ./src/services/
 ```
 
 **macOS/Linux**
 ```bash
 cd /ruta/a/tu/proyecto/03_tcp/web-client
 npm install
+npx slice2js ../../server/src/main/ChatService.ice --output-dir ./src/services/
 ```
 
 ---
 
 ## Ejecución
 
-Ejecuta **en tres terminales diferentes** en el siguiente orden:
+Ejecuta **en dos terminales** en el siguiente orden:
 
-### Terminal 1 — Backend (Java)
+### Terminal 1 — Backend (Java + ICE)
 
 **Windows (CMD/PowerShell)**
 ```cmd
@@ -175,46 +171,16 @@ cd /home/tu-usuario/ruta/a/tu/proyecto/03_tcp
 
 **Salida esperada:**
 ```
-=== SERVIDOR DE CHAT===
+=== SERVIDOR DE CHAT  ===
 Servidor TCP original (puerto 6000)
 Servidor TCP-JSON para proxy HTTP (puerto 12345)
+Servidor ICE RPC (puerto 10000)
 ====================================
 
-[TCP-JSON] Servidor TCP-JSON escuchando en puerto 12345
+ICE server started on port 10000
 ✅ Servidores iniciados correctamente
 💡 Presiona Ctrl+C para detener
 ```
-
----
-
-### Terminal 2 — REST API (Node.js)
-
-**Windows (CMD/PowerShell)**
-```cmd
-cd C:\ruta\a\tu\proyecto\03_tcp\rest-api
-npm start
-```
-
-**macOS**
-```bash
-cd /Users/tu-usuario/ruta/a/tu/proyecto/03_tcp/rest-api
-npm start
-```
-
-**Linux**
-```bash
-cd /home/tu-usuario/ruta/a/tu/proyecto/03_tcp/rest-api
-npm start
-```
-
-**Salida esperada:**
-```
-[REST-API] Server listening on port 5001
-```
-
----
-
-### Terminal 3 — Web Client (Frontend)
 
 **Windows (CMD/PowerShell)**
 ```cmd
@@ -303,11 +269,24 @@ npm start
 * **Confirmación de acción**: diálogos antes de eliminar.
 * **Implementación completa**: backend `clearChatHistory()` en `ChatServicesImpl`.
 
-### Sincronización en Tiempo Real
-* **Polling automático**: consultas HTTP cada 2 segundos.
-* **Actualización de usuarios**: refresh de lista online/offline.
-* **Indicadores de estado**: íconos visuales de conectividad.
-* **Cache local**: optimización de mensajes para reducir tráfico.
+### Sincronización en Tiempo Real con ICE
+
+* **ICE RPC**: comunicación directa y eficiente entre frontend y backend.
+* **WebSockets ICE**: notificaciones push para mensajes, llamadas y eventos.
+* **Historial en tiempo real**: recuperación instantánea de mensajes previos.
+* **Mensajes push**: llegada inmediata sin polling.
+
+### Notas de Voz
+
+* **Grabación desde navegador**: uso de MediaRecorder API.
+* **Envío vía ICE**: audio codificado en base64.
+* **Reproducción integrada**: soporte en interfaz de chat.
+
+### Llamadas de Voz
+
+* **Inicio de llamadas**: notificación push a receptor.
+* **Gestión de estado**: llamadas activas/inactivas.
+* **Finalización**: notificación a ambos participantes.
 
 ### Interfaz Moderna
 * **Diseño tipo WhatsApp**: dark theme profesional y limpio.
@@ -327,21 +306,25 @@ npm start
 
 ## Flujo de comunicación
 
-**Login**
+**Login (HTTP/REST)**
 
 1. Frontend → `POST /api/login` (REST).
 2. Proxy crea socket TCP → backend `:12345` y envía `{ action: "LOGIN", ... }`.
 3. Backend valida/crea usuario y responde `OK`.
 
-**Mensaje privado**
+**Mensajes y Audio (ICE RPC)**
 
-1. Frontend → `POST /api/message/user` con `{ from, to, msg }`.
-2. Backend persiste en `history/<user>.jsonl`, encola en `pending[to]`.
-3. Frontend del receptor hace polling `GET /api/messages/pending/<to>` y renderiza.
+1. Frontend conecta a ICE `:10000` y suscribe a eventos.
+2. Usuario envía mensaje/audio → `sendMessage/sendAudio` vía ICE.
+3. Backend persiste y notifica a receptores vía callback ICE.
+4. Frontend recibe notificación push y actualiza UI.
 
-**Grupo**
+**Llamadas (ICE RPC)**
 
-* Creación `POST /api/group/create`, añadir miembros `POST /api/group/add-member`, mensaje `POST /api/message/group` → persistencia en `history/#Grupo.jsonl` y distribución a miembros.
+1. Usuario inicia llamada → `startCall` vía ICE.
+2. Backend notifica al receptor vía callback `onCallStarted`.
+3. Usuario finaliza → `endCall` vía ICE.
+4. Backend notifica a ambos vía `onCallEnded`.
 
 ---
 
@@ -349,22 +332,20 @@ npm start
 
 ```
 03_tcp/
-├─ server/                       # Backend Java
+├─ server/                       # Backend Java + ICE
 │  ├─ src/main/java/
+│  │  ├─ chat/        ChatService.java, ChatServiceImpl.java, Message.java, etc. (generados por ICE)
 │  │  ├─ controllers/ TCPJSONController.java
 │  │  ├─ dtos/        Request.java, Response.java
 │  │  ├─ services/    ChatServicesImpl.java
 │  │  └─ ui/          Main.java
+│  ├─ src/main/ChatService.ice
 │  ├─ data/           users.txt, groups.txt, history/*.jsonl
 │  └─ build.gradle
-├─ rest-api/                    # Middleware Node.js
-│  ├─ src/index.js
-│  ├─ src/services/delegateService.js
-│  └─ package.json
-├─ web-client/                  # Frontend
+├─ web-client/                  # Frontend + ICE
 │  ├─ src/pages/    Login.js, Chat.js
 │  ├─ src/components/ ProfilePanel.js, UserInfoPanel.js, GroupSettingsPanel.js
-│  ├─ src/services/ restDelegate.js
+│  ├─ src/services/ iceDelegate.js, ChatService.js (generado), restDelegate.js
 │  ├─ index.html / index.css / index.js / webpack.config.js
 │  └─ package.json
 ├─ build.gradle
@@ -656,9 +637,10 @@ Duration: ~0.3s
 
 ### Arquitectura de Comunicación
 
-* **TCP/JSON binario**: comunicación eficiente entre proxy y backend.
-* **HTTP/REST**: interfaz estándar para el frontend.
-* **Polling HTTP**: alternativa simple a WebSockets (2 segundos).
+* **ICE RPC**: middleware para comunicación distribuida, eficiente y tipada.
+* **WebSockets ICE**: transporte principal para notificaciones push en tiempo real desde el navegador.
+* **TCP/JSON binario**: comunicación legacy entre proxy y backend.
+* **HTTP/REST**: interfaz estándar para servicios existentes.
 
 
 
