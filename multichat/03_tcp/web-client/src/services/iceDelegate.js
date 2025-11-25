@@ -45,7 +45,8 @@ console.log('[iceDelegate] window.chat available:', !!window.chat);
 console.log('[iceDelegate] chat.ChatServicePrx available:', !!(chat && chat.ChatServicePrx));
 
 const HOSTNAME = window.location.hostname || 'localhost';
-const ICE_PORT = 10000;
+// Use NodePort 30751 when accessing from network, standard port 10000 for localhost
+const ICE_PORT = HOSTNAME === 'localhost' || HOSTNAME === '127.0.0.1' ? 10000 : 30751;
 
 let communicator = null;
 let chatProxy = null;

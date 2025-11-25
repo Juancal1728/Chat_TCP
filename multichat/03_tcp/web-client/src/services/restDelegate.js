@@ -4,8 +4,10 @@
  * El proxy delega al backend Java TCP (puerto 12345)
  */
 
-// Use dynamic hostname for local and network deployment
-const API_BASE_URL = `http://${window.location.hostname}:3000/api`;
+// Use NodePort 32149 when accessing from network, standard port 3000 for localhost
+const hostname = window.location.hostname || 'localhost';
+const apiPort = hostname === 'localhost' || hostname === '127.0.0.1' ? 3000 : 32149;
+const API_BASE_URL = `http://${hostname}:${apiPort}/api`;
 
 /**
  * Login de usuario
