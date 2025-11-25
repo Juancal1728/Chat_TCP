@@ -1,0 +1,24 @@
+#! chat-net-network-policy.yaml
+# Generated code, do not edit
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+    name: chat-net-network-policy
+    namespace: 03-tcp
+spec:
+    podSelector:
+        matchLabels:
+            com.docker.compose.network.chat-net: "true"
+    policyTypes:
+        - Ingress
+        - Egress
+    ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                    com.docker.compose.network.chat-net: "true"
+    egress:
+        - to:
+            - podSelector:
+                matchLabels:
+                    com.docker.compose.network.chat-net: "true"

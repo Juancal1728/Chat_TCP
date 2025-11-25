@@ -1,0 +1,36 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "10000:10000" # Ice
+      - "8888:8888" # Audio WebSocket
+      - "12345:12345" # TCP JSON
+    networks:
+      - chat-net
+
+  rest-api:
+    build: ./rest-api
+    ports:
+      - "3000:5001"
+    environment:
+      - ICE_SERVER_HOST=server
+      - ICE_SERVER_PORT=10000
+    depends_on:
+      - server
+    networks:
+      - chat-net
+
+  web-client:
+    build: ./web-client
+    ports:
+      - "8080:80"
+    depends_on:
+      - rest-api
+    networks:
+      - chat-net
+
+networks:
+  chat-net:
+    driver: bridge

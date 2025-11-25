@@ -4,7 +4,7 @@
  * El proxy delega al backend Java TCP (puerto 12345)
  */
 
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = `http://${window.location.hostname}:3000/api`;
 
 /**
  * Login de usuario
@@ -61,7 +61,7 @@ export async function logout(username) {
 export async function getOnlineUsers() {
     try {
         const response = await fetch(`${API_BASE_URL}/users/online`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -80,7 +80,7 @@ export async function getOnlineUsers() {
 export async function getAllUsers() {
     try {
         const response = await fetch(`${API_BASE_URL}/users/all`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -203,7 +203,7 @@ export async function addMemberToGroup(groupName, username) {
 export async function getUserGroups(username) {
     try {
         const response = await fetch(`${API_BASE_URL}/groups/${username}`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -223,7 +223,7 @@ export async function getUserGroups(username) {
 export async function getHistory(username) {
     try {
         const response = await fetch(`${API_BASE_URL}/history/${username}`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -243,7 +243,7 @@ export async function getHistory(username) {
 export async function getPendingMessages(username) {
     try {
         const response = await fetch(`${API_BASE_URL}/messages/pending/${username}`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-web-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-web-client
+  template:
+    metadata:
+      labels:
+        app: chat-web-client
+    spec:
+      containers:
+      - name: chat-web-client
+        image: chat-web-client:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-web-client
+spec:
+  type: LoadBalancer
+  selector:
+    app: chat-web-client
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 80
+  - name: https
+    port: 8443
+    targetPort: 443

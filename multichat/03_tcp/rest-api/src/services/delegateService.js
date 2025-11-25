@@ -1,7 +1,7 @@
 import net from 'net';
 
-const HOST = 'localhost';
-const PORT = 12345;
+const HOST = process.env.TCP_SERVER_HOST || 'localhost';
+const PORT = parseInt(process.env.TCP_SERVER_PORT || '12345');
 
 /**
  * Send request to Java TCP-JSON server

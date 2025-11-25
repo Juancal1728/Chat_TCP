@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-rest-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-rest-api
+  template:
+    metadata:
+      labels:
+        app: chat-rest-api
+    spec:
+      containers:
+      - name: chat-rest-api
+        image: chat-rest-api:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 5001
+        env:
+        - name: ICE_SERVER_HOST
+          value: "chat-server"
+        - name: ICE_SERVER_PORT
+          value: "10000"
+        - name: TCP_SERVER_HOST
+          value: "chat-server"
+        - name: TCP_SERVER_PORT
+          value: "12345"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-rest-api
+spec:
+  type: LoadBalancer
+  selector:
+    app: chat-rest-api
+  ports:
+  - port: 3000
+    targetPort: 5001

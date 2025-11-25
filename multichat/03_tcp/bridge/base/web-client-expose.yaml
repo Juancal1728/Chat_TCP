@@ -1,0 +1,18 @@
+#! web-client-expose.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Service
+metadata:
+    name: web-client
+    namespace: 03-tcp
+    labels:
+        com.docker.compose.project: 03_tcp
+        com.docker.compose.service: web-client
+spec:
+    selector:
+        com.docker.compose.project: 03_tcp
+        com.docker.compose.service: web-client
+    ports:
+        - name: web-client-80
+          port: 80
+          targetPort: web-client-80

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-server
+  template:
+    metadata:
+      labels:
+        app: chat-server
+    spec:
+      containers:
+      - name: chat-server
+        image: chat-server:latest
+        imagePullPolicy: Never  # Use local image
+        ports:
+        - containerPort: 10000
+        - containerPort: 8888
+        - containerPort: 12345
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-server
+spec:
+  type: LoadBalancer
+  selector:
+    app: chat-server
+  ports:
+  - name: ice
+    port: 10000
+    targetPort: 10000
+  - name: websocket
+    port: 8888
+    targetPort: 8888
+  - name: tcp-json
+    port: 12345
+    targetPort: 12345
