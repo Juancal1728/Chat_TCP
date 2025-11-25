@@ -4,8 +4,11 @@
  * El proxy delega al backend Java TCP (puerto 12345)
  */
 
-// Use dynamic hostname for local and network deployment
-const API_BASE_URL = `http://${window.location.hostname}:3000/api`;
+// Detect environment and use appropriate API URL
+const isRender = window.location.hostname.includes('onrender.com');
+const API_BASE_URL = isRender
+    ? 'https://chat-rest-api.onrender.com/api'  // Render URL (will be updated after deployment)
+    : `http://${window.location.hostname}:3000/api`; // Local Kubernetes
 
 /**
  * Login de usuario

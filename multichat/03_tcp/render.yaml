@@ -1,0 +1,46 @@
+services:
+  # Java Server
+  - type: web
+    name: chat-server
+    env: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: PORT
+        value: 10000
+
+  # REST API
+  - type: web
+    name: chat-rest-api
+    env: docker
+    dockerfilePath: ./rest-api/Dockerfile
+    dockerContext: ./rest-api
+    plan: free
+    healthCheckPath: /api/users/online
+    envVars:
+      - key: PORT
+        value: 5001
+      - key: TCP_SERVER_HOST
+        fromService:
+          type: web
+          name: chat-server
+          property: host
+      - key: TCP_SERVER_PORT
+        value: 12345
+      - key: ICE_SERVER_HOST
+        fromService:
+          type: web
+          name: chat-server
+          property: host
+      - key: ICE_SERVER_PORT
+        value: 10000
+
+  # Web Client
+  - type: web
+    name: chat-web-client
+    env: docker
+    dockerfilePath: ./web-client/Dockerfile
+    dockerContext: ./web-client
+    plan: free

@@ -13,12 +13,12 @@ spec:
         com.docker.compose.project: 03_tcp
         com.docker.compose.service: server
     ports:
-        - name: server-8888
-          port: 8888
-          targetPort: server-8888
         - name: server-10000
           port: 10000
           targetPort: server-10000
         - name: server-12345
           port: 12345
           targetPort: server-12345
+        - name: server-8888
+          port: 8888
+          targetPort: server-8888

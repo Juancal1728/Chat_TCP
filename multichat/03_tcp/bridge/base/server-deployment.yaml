@@ -28,9 +28,9 @@ spec:
                   image: 03_tcp-server
                   imagePullPolicy: IfNotPresent
                   ports:
-                    - name: server-8888
-                      containerPort: 8888
                     - name: server-10000
                       containerPort: 10000
                     - name: server-12345
                       containerPort: 12345
+                    - name: server-8888
+                      containerPort: 8888
