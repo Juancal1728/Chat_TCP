@@ -6,10 +6,12 @@
 import { startCallViaICE, sendMessageViaICE } from './iceDelegate.js';
 import * as WebRTCService from './webrtcService.js';
 
-// Use NodePort 30925 when accessing from network, standard port 8888 for localhost
+// Use WSS proxy when on network, or direct WS for localhost
 const hostname = window.location.hostname || 'localhost';
-const wsPort = hostname === 'localhost' || hostname === '127.0.0.1' ? 8888 : 30925;
-const AUDIO_WS_URL = `ws://${hostname}:${wsPort}`;
+const isNetwork = hostname !== 'localhost' && hostname !== '127.0.0.1';
+const AUDIO_WS_URL = isNetwork
+    ? `wss://${window.location.host}/ws`  // Use WSS proxy
+    : `ws://${hostname}:8888`;  // Direct connection for localhost
 let ws = null;
 let currentCall = null; // { target: string, peerConnection: null, stream: null }
 let localStream = null;

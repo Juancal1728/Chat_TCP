@@ -4,10 +4,12 @@
  * El proxy delega al backend Java TCP (puerto 12345)
  */
 
-// Use NodePort 32149 when accessing from network, standard port 3000 for localhost
+// Use relative path for HTTPS proxy when on network, or localhost ports
 const hostname = window.location.hostname || 'localhost';
-const apiPort = hostname === 'localhost' || hostname === '127.0.0.1' ? 3000 : 32149;
-const API_BASE_URL = `http://${hostname}:${apiPort}/api`;
+const isNetwork = hostname !== 'localhost' && hostname !== '127.0.0.1';
+const API_BASE_URL = isNetwork
+    ? `${window.location.protocol}//${window.location.host}/api`  // Use proxy
+    : `http://${hostname}:3000/api`;  // Direct connection for localhost
 
 /**
  * Login de usuario
