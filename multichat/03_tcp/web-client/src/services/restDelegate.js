@@ -4,10 +4,8 @@
  * El proxy delega al backend Java TCP (puerto 12345)
  */
 
-// Use Railway API URL or fallback to localhost for development
-const API_BASE_URL = window.location.hostname.includes('railway.app')
-    ? 'https://unique-smile-production.up.railway.app/api'
-    : `http://${window.location.hostname}:3000/api`;
+// Use dynamic hostname for local and network deployment
+const API_BASE_URL = `http://${window.location.hostname}:3000/api`;
 
 /**
  * Login de usuario
