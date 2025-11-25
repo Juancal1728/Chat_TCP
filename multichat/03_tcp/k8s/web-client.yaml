@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: chat-web-client
-        image: chat-web-client:latest
-        imagePullPolicy: Never  # Use local image
+        image: juancal1728/chat-web-client:latest
         ports:
         - containerPort: 80
 ---

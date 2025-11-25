@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: chat-rest-api
-        image: chat-rest-api:latest
-        imagePullPolicy: Never  # Use local image
+        image: juancal1728/chat-rest-api:latest
         ports:
         - containerPort: 5001
         env:

@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
       - name: chat-server
-        image: chat-server:latest
-        imagePullPolicy: Never  # Use local image
+        image: juancal1728/chat-server:latest
         ports:
         - containerPort: 10000
         - containerPort: 8888
