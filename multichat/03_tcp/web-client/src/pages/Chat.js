@@ -569,6 +569,26 @@ function processIncomingMessage(msg) {
             // Not a JSON message, treat as regular text
         }
 
+        // Check if this is an INCOMING_CALL message
+        if (content.startsWith('INCOMING_CALL|')) {
+            const callParts = content.split('|');
+            if (callParts.length >= 3) {
+                const caller = callParts[1];
+                const callId = callParts[2];
+                console.log('[UI] Intercepted INCOMING_CALL from', caller, 'callId:', callId);
+
+                // Show incoming call UI directly
+                showIncomingCallUI({
+                    caller: caller,
+                    callId: callId,
+                    active: true
+                });
+
+                // Don't display this as a regular message
+                return;
+            }
+        }
+
         // Regular text message
         // Agregar al cache SIN DUPLICAR
         if (!messageCache[chatKey]) {
@@ -1990,10 +2010,10 @@ function handleIncomingMessageViaICE(message) {
 
             // Regular text message if not already handled by the ICE call accept
             if (!iceHandled) {
-            addMessageToUI(message.sender, message.content, false, tsObj);
+                addMessageToUI(message.sender, message.content, false, tsObj);
+            }
         }
     }
-}
 }
 
 function handleCallStartedViaICE(call) {
@@ -2454,5 +2474,6 @@ function attachFile() {
     fileInput.click();
     document.body.removeChild(fileInput);
 }
+
 
 export default Chat;
