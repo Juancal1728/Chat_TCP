@@ -68,6 +68,21 @@ export function initializeAudioService(username, onIncomingCall, onCallEnded, on
                 const payload = parts.length > 3 ? parts[3] : '';
 
                 handleSignal(sender, type, payload);
+            } else if (parts[0] === 'INCOMING_CALL') {
+                // Handle incoming call notification: INCOMING_CALL|CALLER|CALL_ID
+                const caller = parts[1];
+                const callId = parts[2];
+                console.log('[AUDIO] Received INCOMING_CALL from', caller, 'callId:', callId);
+
+                // Notify UI about incoming call
+                const callObj = {
+                    caller: caller,
+                    callId: callId,
+                    active: true
+                };
+                if (onIncomingCallCallback) {
+                    onIncomingCallCallback(callObj);
+                }
             } else if (parts[0] === 'ERROR') {
                 console.error('[AUDIO] Server error:', parts[1]);
             }

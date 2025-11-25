@@ -131,7 +131,7 @@ async function getProxy() {
         // Use WSS proxy when on network, direct WS for localhost
         const isNetwork = HOSTNAME !== 'localhost' && HOSTNAME !== '127.0.0.1';
         const proxyString = isNetwork
-            ? `ChatService:wss -h ${window.location.host} -r /ice`  // Use WSS proxy
+            ? `ChatService:wss -h ${HOSTNAME} -p 8443 -r /ice`  // Use WSS proxy with explicit port and resource
             : `ChatService:ws -h ${HOSTNAME} -p ${ICE_PORT}`;  // Direct connection
         const proxy = communicator.stringToProxy(proxyString);
 
