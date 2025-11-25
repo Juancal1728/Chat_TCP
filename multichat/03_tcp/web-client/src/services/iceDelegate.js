@@ -128,7 +128,11 @@ async function getProxy() {
         }
 
         // Create proxy WITHOUT user query parameter; implicit context is used instead
-        const proxyString = `ChatService:ws -h ${HOSTNAME} -p ${ICE_PORT}`;
+        // Use WSS proxy when on network, direct WS for localhost
+        const isNetwork = HOSTNAME !== 'localhost' && HOSTNAME !== '127.0.0.1';
+        const proxyString = isNetwork
+            ? `ChatService:wss -h ${window.location.host} -r /ice`  // Use WSS proxy
+            : `ChatService:ws -h ${HOSTNAME} -p ${ICE_PORT}`;  // Direct connection
         const proxy = communicator.stringToProxy(proxyString);
 
         chatProxy = await chat.ChatServicePrx.checkedCast(proxy);
