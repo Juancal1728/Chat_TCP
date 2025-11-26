@@ -160,34 +160,24 @@ public class Main implements TCPConnection.Listener {
     private void startIceServer(ChatServicesImpl chatServices) {
         LOGGER.info("Starting ICE RPC server");
         try {
-            // Initialize WS communicator
-            Communicator wsCommunicator = Util.initialize();
+            // Create properties to disable SSL plugins
+            com.zeroc.Ice.Properties props = Util.createProperties();
+            props.setProperty("Ice.Plugin", ""); // Disable all plugins
+            props.setProperty("Ice.Plugin.IceSSL", ""); // Explicitly disable SSL plugin
+
+            InitializationData initData = new InitializationData();
+            initData.properties = props;
+
+            // Initialize WS communicator with explicit properties
+            Communicator wsCommunicator = Util.initialize(initData);
             ObjectAdapter wsAdapter = wsCommunicator.createObjectAdapterWithEndpoints(
                 "ChatAdapterWS", String.format("ws -p %d -h 0.0.0.0", config.iceWsPort));
             ChatServiceImpl chatServiceWS = new ChatServiceImpl(chatServices);
             wsAdapter.add(chatServiceWS, Util.stringToIdentity("ChatService"));
             wsAdapter.activate();
 
-            // Initialize WSS communicator with SSL
-            com.zeroc.Ice.Properties sslProps = Util.createProperties();
-            sslProps.setProperty("Ice.Plugin.IceSSL", "IceSSL.PluginFactory");
-            sslProps.setProperty("IceSSL.DefaultDir", config.sslCertDir);
-            sslProps.setProperty("IceSSL.CertFile", config.sslCertFile);
-            sslProps.setProperty("IceSSL.Password", config.sslPassword);
-            sslProps.setProperty("IceSSL.CAs", config.sslCaFile);
-
-            InitializationData sslInitData = new InitializationData();
-            sslInitData.properties = sslProps;
-
-            Communicator wssCommunicator = Util.initialize(sslInitData);
-            ObjectAdapter wssAdapter = wssCommunicator.createObjectAdapterWithEndpoints(
-                "ChatAdapterWSS", String.format("wss -p %d -h 0.0.0.0", config.iceWssPort));
-            ChatServiceImpl chatServiceWSS = new ChatServiceImpl(chatServices);
-            wssAdapter.add(chatServiceWSS, Util.stringToIdentity("ChatService"));
-            wssAdapter.activate();
-
             LOGGER.info(String.format("ICE WS server started on port %d", config.iceWsPort));
-            LOGGER.info(String.format("ICE WSS server started on port %d", config.iceWssPort));
+            LOGGER.info("ICE WSS server disabled (SSL certificates not configured)");
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "ICE server failed to start", e);
@@ -265,7 +255,7 @@ public class Main implements TCPConnection.Listener {
         System.out.println("║  TCP Server          : 6000                                  ║");
         System.out.println("║  HTTP Proxy          : 12345                                 ║");
         System.out.println("║  ICE RPC (WS)        : 10000                                 ║");
-        System.out.println("║  ICE RPC (WSS)       : 8443                                  ║");
+        System.out.println("║  ICE RPC (WSS)       : DISABLED (No SSL certs)               ║");
         System.out.println("║  Audio WebSocket     : 8888                                  ║");
         System.out.println("╠══════════════════════════════════════════════════════════════╣");
         System.out.println("║  Authors: Juan David Calderón & Juan Felipe Nieto           ║");
@@ -287,10 +277,6 @@ public class Main implements TCPConnection.Listener {
         final int audioWsPort;
         final int iceWsPort;
         final int iceWssPort;
-        final String sslCertDir;
-        final String sslCertFile;
-        final String sslPassword;
-        final String sslCaFile;
 
         ServerConfig(Properties props) {
             this.tcpPort = Integer.parseInt(props.getProperty("tcp.port", "6000"));
@@ -298,10 +284,6 @@ public class Main implements TCPConnection.Listener {
             this.audioWsPort = Integer.parseInt(props.getProperty("audio.ws.port", "8888"));
             this.iceWsPort = Integer.parseInt(props.getProperty("ice.ws.port", "10000"));
             this.iceWssPort = Integer.parseInt(props.getProperty("ice.wss.port", "8443"));
-            this.sslCertDir = props.getProperty("ssl.cert.dir", "server/src/main/resources/certs");
-            this.sslCertFile = props.getProperty("ssl.cert.file", "server.p12");
-            this.sslPassword = props.getProperty("ssl.cert.password", "password");
-            this.sslCaFile = props.getProperty("ssl.ca.file", "ca.pem");
         }
     }
 }

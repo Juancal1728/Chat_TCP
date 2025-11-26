@@ -1,3 +1,3 @@
-{type:text,from:testUser1,target:testUser2,isGroup:false,msg:Mensaje de prueba,ts:2025-11-26T03:26:40.069201Z}
-{type:text,from:testUser1,target:testUser2,isGroup:false,msg:Hola!,ts:2025-11-26T03:26:40.179027Z}
-{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T03:26:40.180701Z}
+{type:text,from:testUser1,target:testUser2,isGroup:false,msg:Mensaje de prueba,ts:2025-11-26T13:15:25.482497Z}
+{type:text,from:testUser1,target:testUser2,isGroup:false,msg:Hola!,ts:2025-11-26T13:15:25.588764Z}
+{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T13:15:25.590509Z}

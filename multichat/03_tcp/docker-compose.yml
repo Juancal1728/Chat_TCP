@@ -4,34 +4,42 @@ services:
       context: .
       dockerfile: server/Dockerfile
     ports:
-      - "10000:10000" # Ice WS
-      - "8443:8443" # Ice WSS
-      - "8888:8888" # Audio WebSocket
-      - "12345:12345" # TCP JSON
+      - "0.0.0.0:10000:10000" # Ice WS
+      - "0.0.0.0:8443:8443" # Ice WSS
+      - "0.0.0.0:8888:8888" # Audio WebSocket
+      - "0.0.0.0:12345:12345" # TCP JSON
     networks:
       - chat-net
+      - proxy-net
 
   rest-api:
     build: ./rest-api
     ports:
-      - "3000:5001"
+      - "0.0.0.0:3000:5001"
     environment:
       - ICE_SERVER_HOST=server
       - ICE_SERVER_PORT=10000
+      - TCP_SERVER_HOST=server
+      - TCP_SERVER_PORT=12345
     depends_on:
       - server
     networks:
       - chat-net
+      - proxy-net
 
   web-client:
     build: ./web-client
     ports:
-      - "8080:80"
+      - "0.0.0.0:8080:80"
+      - "0.0.0.0:8444:443"
     depends_on:
       - rest-api
     networks:
       - chat-net
+      - proxy-net
 
 networks:
   chat-net:
     driver: bridge
+  proxy-net:
+    external: true

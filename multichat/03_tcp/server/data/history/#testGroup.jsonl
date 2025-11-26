@@ -23,3 +23,8 @@
 {type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T02:46:41.232498Z}
 {type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T03:13:50.106003Z}
 {type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T03:26:40.180701Z}
+{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T13:05:57.306975Z}
+{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T13:09:33.035534Z}
+{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T13:11:53.006218Z}
+{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T13:13:39.874739Z}
+{type:text,from:testUser1,target:testGroup,isGroup:true,msg:Hola grupo!,ts:2025-11-26T13:15:25.590509Z}

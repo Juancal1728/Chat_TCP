@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 
-<!DOCTYPE html>
-<html lang="es">
-
-<!DOCTYPE html>
-<html lang="es">
-
-<!DOCTYPE html>
-<html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,26 +19,39 @@
                 const pagePort = window.location.port || '';
                 const isHttps = window.location.protocol === 'https:';
                 const wsProtocol = isHttps ? 'wss:' : 'ws:';
-                const isLocal = host === 'localhost' || host === '127.0.0.1';
+                const isLocal = host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
                 
-                // For Kubernetes deployment, both users need to connect to the same ICE server
-                // Use external IP/port when not pure localhost, otherwise use local development ports
-                let iceHost, icePort, iceUseWss;
+                // For remote access, use the current host and appropriate ports
+                let iceHost, icePort, iceUseWss, apiBaseUrl, audioWsUrl;
+                
                 if (isLocal && pagePort === '') {
                     // Pure localhost development (no port in URL)
                     iceHost = 'localhost';
                     icePort = 10000;
                     iceUseWss = false;
+                    apiBaseUrl = 'http://localhost:3000/api';
+                    audioWsUrl = 'ws://localhost:8888';
                 } else {
-                    // Kubernetes or external access - use the same ICE server for all users
+                    // Remote access or external deployment - use current host
                     iceHost = host;
-                    icePort = 8443; // Always use WSS port for Kubernetes
-                    iceUseWss = true;
+                    icePort = isHttps ? 8443 : 10000; // Use WSS port for HTTPS, WS for HTTP
+                    iceUseWss = isHttps;
+                    apiBaseUrl = `${origin}/api`;
+                    audioWsUrl = `${wsProtocol}//${host}:${isHttps ? '8443' : '8888'}`;
+                    
+                    // For proxy setups (like port 31225), ICE connections need to bypass the proxy
+                    // and connect directly to the server IP and port
+                    if (pagePort && pagePort !== '80' && pagePort !== '443') {
+                        // We're behind a proxy, use direct connection for ICE
+                        iceHost = host;
+                        icePort = 10000; // Always use WS port for direct connection
+                        iceUseWss = false;
+                    }
                 }
 
                 window.__CHAT_CONFIG__ = {
-                    apiBaseUrl: isLocal && pagePort === '' ? 'http://localhost:3000/api' : `${origin}/api`,
-                    audioWsUrl: isLocal && pagePort === '' ? 'ws://localhost:8888' : `${wsProtocol}//${window.location.host}/ws`,
+                    apiBaseUrl: apiBaseUrl,
+                    audioWsUrl: audioWsUrl,
                     iceHost: iceHost,
                     icePort: icePort,
                     iceResource: '/ice',
@@ -55,11 +59,23 @@
                     turnServers: [
                         {
                             urls: [
+                                'stun:stun.l.google.com:19302',
+                                'stun:stun1.l.google.com:19302',
+                                'stun:stun2.l.google.com:19302'
+                            ]
+                        },
+                        {
+                            urls: [
                                 'turn:openrelay.metered.ca:443?transport=tcp',
                                 'turn:openrelay.metered.ca:80?transport=tcp'
                             ],
                             username: 'openrelayproject',
                             credential: 'openrelayproject'
+                        },
+                        {
+                            urls: 'turn:numb.viagenie.ca',
+                            credential: 'muazkh',
+                            username: 'webrtc@live.com'
                         }
                     ]
                 };

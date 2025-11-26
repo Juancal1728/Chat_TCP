@@ -27,23 +27,34 @@ if (!window.Ice._require) {
 }
 
 // Load ChatService.js dynamically now that Ice is ready
-if (!window.chat) {
-    console.log('[iceDelegate] Loading ChatService.js dynamically...');
-    const script = document.createElement('script');
-    script.src = 'src/services/ChatService.js';
-    script.onload = function () {
-        console.log('[iceDelegate] ChatService.js loaded successfully');
-        console.log('[iceDelegate] window.chat available:', !!window.chat);
-    };
-    script.onerror = function () {
-        console.error('[iceDelegate] Failed to load ChatService.js');
-    };
-    document.head.appendChild(script);
+function loadChatService() {
+    return new Promise((resolve, reject) => {
+        if (window.chat) {
+            console.log('[iceDelegate] ChatService already loaded');
+            resolve(window.chat);
+            return;
+        }
+
+        console.log('[iceDelegate] Loading ChatService.js dynamically...');
+        const script = document.createElement('script');
+        script.src = 'src/services/ChatService.js';
+        script.onload = function () {
+            console.log('[iceDelegate] ChatService.js loaded successfully');
+            console.log('[iceDelegate] window.chat available:', !!window.chat);
+            resolve(window.chat);
+        };
+        script.onerror = function () {
+            console.error('[iceDelegate] Failed to load ChatService.js');
+            reject(new Error('Failed to load ChatService.js'));
+        };
+        document.head.appendChild(script);
+    });
 }
 
 // ChatService.js will be loaded dynamically and will set window.chat
 // Access the chat namespace from global scope (set by ChatService.js UMD module)
-let chat = window.chat;
+let chat = null;
+let chatServicePromise = null;
 
 // Debug logging
 console.log('[iceDelegate] window.Ice available:', !!window.Ice);
@@ -57,11 +68,24 @@ let connectionManager = null;
 /**
  * Initialize ICE with user context
  */
-export function initializeICE(userId) {
-    if (!connectionManager) {
-        connectionManager = new IceConnectionManager(config, chat);
+export async function initializeICE(userId) {
+    try {
+        // Ensure ChatService is loaded
+        if (!chat) {
+            if (!chatServicePromise) {
+                chatServicePromise = loadChatService();
+            }
+            chat = await chatServicePromise;
+        }
+
+        if (!connectionManager) {
+            connectionManager = new IceConnectionManager(config, chat);
+        }
+        return await connectionManager.initialize(userId);
+    } catch (error) {
+        console.error('[iceDelegate] Failed to initialize ICE:', error);
+        throw error;
     }
-    return connectionManager.initialize(userId);
 }
 
 /**
