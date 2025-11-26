@@ -344,6 +344,15 @@ export async function acceptCall(callerUser, callId, offer) {
 
         if (!effectiveOffer) {
             console.warn('[AUDIO] No offer available to accept the call. Proceeding with dummy connection for demo.');
+
+            // Send CALL_ACCEPT signal to caller so their UI updates to "In Call"
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // Send empty answer or dummy payload
+                const acceptPayload = JSON.stringify({ type: 'answer', sdp: '' });
+                ws.send(`SIGNAL|${callerUser}|CALL_ACCEPT|${acceptPayload}`);
+                console.log('[AUDIO] Sent dummy CALL_ACCEPT signal to', callerUser);
+            }
+
             // Create a dummy connection state to satisfy UI
             if (typeof onCallConnectedCallback === 'function') {
                 onCallConnectedCallback(callerUser);
