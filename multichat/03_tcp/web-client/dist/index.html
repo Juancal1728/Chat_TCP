@@ -18,6 +18,54 @@
 
 <body>
     <div id="app"></div>
+    <!-- Runtime configuration override for REST, Audio WS, ICE/TURN (adjust as needed for k8s/local) -->
+    <script>
+        (function () {
+            // Only set defaults if not already provided
+            if (!window.__CHAT_CONFIG__) {
+                const origin = window.location.origin;
+                const host = window.location.hostname || 'localhost';
+                const pagePort = window.location.port || '';
+                const isHttps = window.location.protocol === 'https:';
+                const wsProtocol = isHttps ? 'wss:' : 'ws:';
+                const isLocal = host === 'localhost' || host === '127.0.0.1';
+                
+                // For Kubernetes deployment, both users need to connect to the same ICE server
+                // Use external IP/port when not pure localhost, otherwise use local development ports
+                let iceHost, icePort, iceUseWss;
+                if (isLocal && pagePort === '') {
+                    // Pure localhost development (no port in URL)
+                    iceHost = 'localhost';
+                    icePort = 10000;
+                    iceUseWss = false;
+                } else {
+                    // Kubernetes or external access - use the same ICE server for all users
+                    iceHost = host;
+                    icePort = 8443; // Always use WSS port for Kubernetes
+                    iceUseWss = true;
+                }
+
+                window.__CHAT_CONFIG__ = {
+                    apiBaseUrl: isLocal && pagePort === '' ? 'http://localhost:3000/api' : `${origin}/api`,
+                    audioWsUrl: isLocal && pagePort === '' ? 'ws://localhost:8888' : `${wsProtocol}//${window.location.host}/ws`,
+                    iceHost: iceHost,
+                    icePort: icePort,
+                    iceResource: '/ice',
+                    iceUseWss: iceUseWss,
+                    turnServers: [
+                        {
+                            urls: [
+                                'turn:openrelay.metered.ca:443?transport=tcp',
+                                'turn:openrelay.metered.ca:80?transport=tcp'
+                            ],
+                            username: 'openrelayproject',
+                            credential: 'openrelayproject'
+                        }
+                    ]
+                };
+            }
+        })();
+    </script>
     <!-- bundle.js will load Ice and then dynamically load ChatService.js -->
     <script src="bundle.js"></script>
 </body>

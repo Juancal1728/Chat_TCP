@@ -1,9 +1,0 @@
-#! web-client-service.yaml
-# Generated code, do not edit
-apiVersion: v1
-kind: Service
-metadata:
-    name: web-client-published
-    namespace: 03-tcp
-spec:
-    type: LoadBalancer

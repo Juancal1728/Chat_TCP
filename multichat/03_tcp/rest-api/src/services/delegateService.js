@@ -139,3 +139,7 @@ export const deleteUser = (username) => {
 export const cleanupInvalidUsers = () => {
   return sendRequest('CLEANUP_INVALID_USERS', {});
 };
+
+export const endCall = (from, to) => {
+  return sendRequest('END_CALL', { from, to });
+};

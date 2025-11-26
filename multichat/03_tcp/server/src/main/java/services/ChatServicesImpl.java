@@ -548,6 +548,11 @@ public class ChatServicesImpl {
         return "websocket";
     }
 
+    public boolean endCall(String from, String to) {
+        // For simplicity, just return true as calls are handled via ICE/WebRTC
+        return true;
+    }
+
     // ---- Utilidades ----
     private void broadcast(String message) {
         users.values().forEach(session -> {

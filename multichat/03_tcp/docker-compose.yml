@@ -4,7 +4,8 @@ services:
       context: .
       dockerfile: server/Dockerfile
     ports:
-      - "10000:10000" # Ice
+      - "10000:10000" # Ice WS
+      - "8443:8443" # Ice WSS
       - "8888:8888" # Audio WebSocket
       - "12345:12345" # TCP JSON
     networks:

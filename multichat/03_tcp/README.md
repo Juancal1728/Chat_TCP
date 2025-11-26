@@ -147,9 +147,11 @@ npx slice2js ../../server/src/main/ChatService.ice --output-dir ./src/services/
 
 ## Ejecución
 
+### Opción 1: Ejecución Local Manual
+
 Ejecuta **en dos terminales** en el siguiente orden:
 
-### Terminal 1 — Backend (Java + ICE)
+#### Terminal 1 — Backend (Java + ICE)
 
 **Windows (CMD/PowerShell)**
 ```cmd
@@ -174,13 +176,15 @@ cd /home/tu-usuario/ruta/a/tu/proyecto/03_tcp
 === SERVIDOR DE CHAT  ===
 Servidor TCP original (puerto 6000)
 Servidor TCP-JSON para proxy HTTP (puerto 12345)
-Servidor ICE RPC (puerto 10000)
+Servidor ICE RPC (puerto 10000 WS y 8443 WSS)
 ====================================
 
-ICE server started on port 10000
+ICE server started on ports 10000 (WS) and 8443 (WSS)
 ✅ Servidores iniciados correctamente
 💡 Presiona Ctrl+C para detener
 ```
+
+#### Terminal 2 — Frontend (Web Client)
 
 **Windows (CMD/PowerShell)**
 ```cmd
@@ -204,6 +208,113 @@ npm start
 ```
 <i> [webpack-dev-server] Project is running at:
 <i> [webpack-dev-server] Loopback: http://localhost:8080/
+```
+
+### Opción 2: Docker Compose (Recomendado para Desarrollo)
+
+**Windows/macOS/Linux**
+```bash
+cd /ruta/a/tu/proyecto/03_tcp
+docker-compose up --build
+```
+
+**Salida esperada:**
+- Web Client: http://localhost:8080
+- REST API: http://localhost:3000
+- ICE Server: ws://localhost:10000, wss://localhost:8443
+
+### Opción 3: Kubernetes
+
+Despliega en un cluster Kubernetes:
+
+**Windows/macOS/Linux**
+```bash
+cd /ruta/a/tu/proyecto/03_tcp
+kubectl apply -f k8s/
+```
+
+**Puertos expuestos:**
+- Web Client: NodePort 31771 (HTTP), 31225 (HTTPS)
+- ICE Server: LoadBalancer en puertos 10000 (WS), 8443 (WSS)
+
+Verifica servicios:
+```bash
+kubectl get svc
+kubectl get pods
+```
+
+### Despliegue y Pruebas con Docker/Kubernetes
+
+#### Reconstruir y Actualizar Imágenes
+
+**Web Client:**
+```bash
+# Reconstruir imagen
+docker build -t chat-web-client:latest -f web-client/Dockerfile web-client/
+
+# Etiquetar para Docker Hub
+docker tag chat-web-client:latest juancal1728/chat-web-client:latest
+
+# Subir a Docker Hub
+docker push juancal1728/chat-web-client:latest
+```
+
+**Server (Java + ICE):**
+```bash
+# Reconstruir imagen
+docker build -t chat-server:latest -f server/Dockerfile .
+
+# Etiquetar para Docker Hub
+docker tag chat-server:latest juancal1728/chat-server:latest
+
+# Subir a Docker Hub
+docker push juancal1728/chat-server:latest
+```
+
+**REST API (Node.js):**
+```bash
+# Reconstruir imagen
+docker build -t chat-rest-api:latest -f rest-api/Dockerfile rest-api/
+
+# Etiquetar para Docker Hub
+docker tag chat-rest-api:latest juancal1728/chat-rest-api:latest
+
+# Subir a Docker Hub
+docker push juancal1728/chat-rest-api:latest
+```
+
+#### Actualizar Deployment en Kubernetes
+
+```bash
+# Reiniciar deployment del web client
+kubectl rollout restart deployment chat-web-client
+
+# Reiniciar deployment del server
+kubectl rollout restart deployment chat-server
+
+# Reiniciar deployment de la REST API
+kubectl rollout restart deployment chat-rest-api
+
+# Verificar estado de los pods
+sleep 15
+kubectl get pods
+
+# Ver servicios
+kubectl get svc chat-web-client -o wide
+kubectl get svc chat-server -o wide
+kubectl get svc chat-rest-api -o wide
+```
+
+#### Verificar Puertos en Kubernetes
+
+```bash
+# Ver configuración completa de servicios
+kubectl get svc chat-web-client -o yaml | grep -A3 ports
+kubectl get svc chat-server -o yaml | grep -A3 ports
+kubectl get svc chat-rest-api -o yaml | grep -A3 ports
+
+# Ver logs de un pod específico
+kubectl logs -f <pod-name>
 ```
 
 ---
@@ -310,18 +421,18 @@ npm start
 2. Proxy crea socket TCP → backend `:12345` y envía `{ action: "LOGIN", ... }`.
 3. Backend valida/crea usuario y responde `OK`.
 
-**Mensajes y Audio (ICE RPC)**
+**Mensajes y Audio (ICE RPC + WebSocket)**
 
-1. Frontend conecta a ICE `:10000` y suscribe a eventos.
+1. Frontend conecta a ICE `:10000` (WS) o `:8443` (WSS) y suscribe a eventos.
 2. Usuario envía mensaje/audio → `sendMessage/sendAudio` vía ICE (usuarios o grupos).
-3. Backend persiste y notifica a receptores vía callback ICE; fallback WebSocket si el callback no está disponible.
+3. Backend persiste y notifica a receptores vía callback ICE; fallback WebSocket `:8888` si el callback no está disponible.
 4. Frontend recibe notificación push y actualiza UI.
 
-**Llamadas (ICE RPC)**
+**Llamadas (ICE RPC + WebRTC)**
 
 1. Usuario inicia llamada → `startCall` vía ICE.
 2. Backend notifica al receptor vía callback `onCallStarted`.
-3. Usuario finaliza → `endCall` vía ICE.
+3. Usuario finaliza → `endCall` vía ICE o fallback REST `POST /api/call/end`.
 4. Backend notifica a ambos vía `onCallEnded`.
 
 ---

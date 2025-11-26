@@ -3,12 +3,16 @@
  * Handles peer-to-peer audio connections using WebRTC
  */
 
-// Configuration for ICE servers (STUN/TURN)
+import config from '../config.js';
+
+// Configuration for ICE servers (STUN/TURN) — can be overridden via config.turnServers
 const ICE_SERVERS = {
-    iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
-    ]
+    iceServers: (config.turnServers && config.turnServers.length > 0)
+        ? config.turnServers
+        : [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]
 };
 
 // State

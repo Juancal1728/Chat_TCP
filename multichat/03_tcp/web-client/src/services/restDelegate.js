@@ -4,12 +4,10 @@
  * El proxy delega al backend Java TCP (puerto 12345)
  */
 
-// Use relative path for HTTPS proxy when on network, or localhost ports
-const hostname = window.location.hostname || 'localhost';
-const isNetwork = hostname !== 'localhost' && hostname !== '127.0.0.1';
-const API_BASE_URL = isNetwork
-    ? `${window.location.protocol}//${window.location.host}/api`  // Use proxy
-    : `http://${hostname}:3000/api`;  // Direct connection for localhost
+import config from '../config.js';
+
+// Use config-driven API base URL (default falls back to localhost or same-origin proxy)
+const API_BASE_URL = config.apiBaseUrl;
 
 /**
  * Login de usuario

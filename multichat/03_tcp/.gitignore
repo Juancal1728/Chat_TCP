@@ -1,5 +1,63 @@
-# Ignore Gradle project-specific cache directory
-.gradle
+# Build outputs
+build/
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+!gradle/wrapper/gradle-wrapper.jar
 
-# Ignore Gradle build output directory
-build
+# IDE files
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+
+# Docker
+.dockerignore
+
+# Temporary files
+*.bak
+*.backup
+*~
+
+# Java
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Web assets
+web-client/dist/
+web-client/.cache/
+
+# Server data (keep structure but not actual data)
+server/data/users.txt
+server/data/groups.txt
+server/data/history/
+!server/data/.gitkeep
+
+# SSL certificates (keep structure)
+web-client/ssl/
+!web-client/ssl/.gitkeep
+
+# Kubernetes
+k8s/*.yaml.bak
+
+# Logs
+logs/
+*.log

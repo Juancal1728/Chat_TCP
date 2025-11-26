@@ -217,6 +217,15 @@ public class TCPJSONController {
                             response.setMessage(cleanedCount + " invalid users cleaned");
                             break;
 
+                        case "END_CALL":
+                            String caller = (String) data.get("from");
+                            String callee = (String) data.get("to");
+                            boolean ended = chatServices.endCall(caller, callee);
+                            response.setStatus(ended ? "OK" : "ERROR");
+                            response.setSuccess(ended);
+                            response.setMessage(ended ? "Call ended" : "Error ending call");
+                            break;
+
                         default:
                             response.setStatus("ERROR");
                             response.setMessage("Unknown action: " + request.action);

@@ -15,7 +15,8 @@ import {
   getPendingMessages,
   clearChatHistory,
   deleteUser,
-  cleanupInvalidUsers
+  cleanupInvalidUsers,
+  endCall
 } from './services/delegateService.js';
 
 const app = express();
@@ -168,6 +169,17 @@ app.delete('/api/user/:username', async (req, res) => {
 app.post('/api/admin/cleanup', async (req, res) => {
   try {
     const result = await cleanupInvalidUsers();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ status: 'ERROR', message: error.message });
+  }
+});
+
+// End call
+app.post('/api/call/end', async (req, res) => {
+  try {
+    const { from, to } = req.body;
+    const result = await endCall(from, to);
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ status: 'ERROR', message: error.message });

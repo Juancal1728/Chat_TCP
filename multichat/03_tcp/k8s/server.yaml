@@ -17,6 +17,7 @@ spec:
         image: juancal1728/chat-server:latest
         ports:
         - containerPort: 10000
+        - containerPort: 8443
         - containerPort: 8888
         - containerPort: 12345
 ---
@@ -29,9 +30,12 @@ spec:
   selector:
     app: chat-server
   ports:
-  - name: ice
+  - name: ice-ws
     port: 10000
     targetPort: 10000
+  - name: ice-wss
+    port: 8443
+    targetPort: 8443
   - name: websocket
     port: 8888
     targetPort: 8888
