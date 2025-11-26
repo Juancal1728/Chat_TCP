@@ -305,7 +305,7 @@ function createChatArea(onHeaderClick) {
 async function initializeChat(username) {
     try {
         // Initialize ICE with user context
-        initializeICE(username);
+        await initializeICE(username);
 
         // Login via REST API
         const loginResult = await login(username);

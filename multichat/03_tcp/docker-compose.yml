@@ -4,10 +4,10 @@ services:
       context: .
       dockerfile: server/Dockerfile
     ports:
-      - "0.0.0.0:10000:10000" # Ice WS
-      - "0.0.0.0:8443:8443" # Ice WSS
-      - "0.0.0.0:8888:8888" # Audio WebSocket
-      - "0.0.0.0:12345:12345" # TCP JSON
+      - "0.0.0.0:10000:10000" # Ice WS - Público
+      - "0.0.0.0:8443:8443" # Ice WSS - Público
+      - "0.0.0.0:8888:8888" # Audio WebSocket - Público
+      - "0.0.0.0:12345:12345" # TCP JSON - Público
     networks:
       - chat-net
       - proxy-net
@@ -30,7 +30,7 @@ services:
   web-client:
     build: ./web-client
     ports:
-      - "0.0.0.0:8080:80"
+      - "0.0.0.0:31225:80"
       - "0.0.0.0:8444:443"
     depends_on:
       - rest-api
